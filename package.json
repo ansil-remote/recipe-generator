@@ -12,5 +12,4 @@
   "build": "echo 'Skipping build step'",
   "start": "vercel dev"
 }
-
 }
