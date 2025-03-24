@@ -1,6 +1,25 @@
 import axios from 'axios';
+import LRUCache from 'lru-cache';
+
+// Rate limiter configuration
+const rateLimitCache = new LRUCache({
+  max: 500,
+  ttl: 1000 * 60 // 1 minute window
+});
 
 export default async (req, res) => {
+  // Rate limiting by IP
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const limit = 5; // 5 requests per minute
+  
+  if (rateLimitCache.get(ip) >= limit) {
+    return res.status(429).json({
+      error: "Too many requests",
+      message: "Please try again in a minute"
+    });
+  }
+  rateLimitCache.set(ip, (rateLimitCache.get(ip) || 0) + 1);
+
   try {
     // Validate request body
     if (!req.body || !req.body.ingredients) {
@@ -59,7 +78,7 @@ export default async (req, res) => {
           'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
           'Content-Type': 'application/json'
         },
-        timeout: 10000 // 10-second timeout
+        timeout: 10000
       }
     );
 
@@ -93,7 +112,6 @@ export default async (req, res) => {
     }
 
   } catch (error) {
-    // Handle different error types
     console.error('🔥 API Error:', error.message);
     
     if (error.response) {
@@ -109,17 +127,5 @@ export default async (req, res) => {
       error: "Recipe generation failed",
       details: errorMessage 
     });
-    // Rate limiter (1 request every 5 seconds per IP)
-import rateLimit from 'express-rate-limit';
-
-const limiter = rateLimit({
-  windowMs: 5 * 1000, // 5 seconds
-  max: 1
-});
-
-export default async (req, res) => {
-  await limiter(req, res); // Apply rate limiting
-  // ... rest of your code
-};
   }
 };
