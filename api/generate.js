@@ -109,5 +109,17 @@ export default async (req, res) => {
       error: "Recipe generation failed",
       details: errorMessage 
     });
+    // Rate limiter (1 request every 5 seconds per IP)
+import rateLimit from 'express-rate-limit';
+
+const limiter = rateLimit({
+  windowMs: 5 * 1000, // 5 seconds
+  max: 1
+});
+
+export default async (req, res) => {
+  await limiter(req, res); // Apply rate limiting
+  // ... rest of your code
+};
   }
 };
