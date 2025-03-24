@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YourGlucoChef.com - AI Diabetes Recipes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0faf0;
+            color: #2c5f2d;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 { 
+            text-align: center; 
+            font-size: 2rem;
+            color: #1e401f;
+        }
+        .ai-generator-box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        input, button { 
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #2c5f2d;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button { 
+            background: #2c5f2d;
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        button:hover { opacity: 0.9; }
+        #recipe-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8fff8;
+            border-radius: 8px;
+        }
+        .ad-banner { margin: 30px 0; }
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #666;
+            padding: 20px;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 1.5rem; }
+            .container { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍴 YourGlucoChef.com</h1>
+        
+        <div class="ai-generator-box">
+            <input type="text" id="ingredients" 
+                   placeholder="What ingredients do you have? (e.g. chicken, spinach)">
+            <button onclick="generateRecipe()">
+                <i class="fas fa-magic"></i> Generate Recipe
+            </button>
+            <div id="recipe-result"></div>
+        </div>
+
+        <div class="ad-banner">
+            <!-- Instacart Affiliate Banner -->
+            <a href="[https://www.instacart.com/tastemakers]">
+                <img src="https://example.com/instacart-banner.jpg" 
+                     alt="Get Ingredients" style="width:100%">
+            </a>
+        </div>
+
+        <footer align="center">
+            © 2025 YourGlucoChef.com • Built by ASI
+        </footer>
+    </div>
+
+    <script>
+        async function generateRecipe() {
+            const ingredients = document.getElementById('ingredients').value;
+            const resultDiv = document.getElementById('recipe-result');
+            
+            resultDiv.innerHTML = '<p>🧑🍳 AI Chef is cooking...</p>';
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ingredients: ingredients,
+                        carbs: 30
+                    })
+                });
+
+                if (!response.ok) throw new Error('API error');
+                
+                const recipe = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="recipe-card">
+                        <h3>${recipe.title}</h3>
+                        <p>🥗 Carbs: ${recipe.nutrition.carbs} | GI: ${recipe.nutrition.gi}</p>
+                        <h4>Ingredients:</h4>
+                        <ul>${recipe.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
+                        <h4>Instructions:</h4>
+                        <ol>${recipe.instructions.map(s => `<li>${s}</li>`).join('')}</ol>
+                        <a href="[https://www.instacart.com/tastemakers]" 
+                           target="_blank" 
+                           style="color: #2c5f2d; margin-top:15px; display:block">
+                            🛒 Get Ingredients on Instacart
+                        </a>
+                    </div>
+                `;
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p style="color: #ff6666">
+                        ⚠️ Error generating recipe. Please try again!
+                    </p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
