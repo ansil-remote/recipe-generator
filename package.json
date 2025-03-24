@@ -7,7 +7,7 @@
   },
   "engines": {
     "node": ">=18"
-  }
+  },
 "scripts": {
   "build": "echo 'Skipping build step'",
   "start": "vercel dev"
