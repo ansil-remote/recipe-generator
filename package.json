@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "axios": "^1.6.2"
+    "axios": "^1.6.2",
+    "@vercel/node": "^4.0.0"
   },
   "engines": {
     "node": ">=18"
   },
-"scripts": {
-  "build": "echo 'Skipping build step'",
-  "start": "vercel dev"
-}
+  "scripts": {
+    "build": "mkdir -p public && cp index.html public/ && cp -r api public/",
+    "start": "vercel dev"
+  }
 }
