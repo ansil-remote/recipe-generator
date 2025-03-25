@@ -8,9 +8,7 @@
     "lru-cache": "^10.2.0",
     "node-fetch": "^2.6.7" 
   },
-  "overrides": {
-    "node-fetch": "2.6.7"
-  },
+  
   "engines": {
     "node": ">=18"
   },
