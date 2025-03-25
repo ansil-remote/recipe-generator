@@ -1,7 +1,6 @@
 {
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*)", "dest": "public/index.html" }
-  ],
-  "outputDirectory": "public"
+    { "src": "/api/generate", "dest": "/api/generate.js" },
+    { "src": "/(.*)", "dest": "/public/index.html" }
+  ]
 }
