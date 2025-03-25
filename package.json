@@ -4,14 +4,18 @@
   "type": "module",
   "dependencies": {
     "axios": "^1.7.2",
-    "@vercel/node": "^4.0.0",
-    "lru-cache": "^10.2.0"
+    "@vercel/node": "4.0.0", // Pin exact version
+    "lru-cache": "^10.2.0",
+    "node-fetch": "^2.6.7" // Force secure version
+  },
+  "overrides": {
+    "node-fetch": "2.6.7"
   },
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "build": "mkdir -p public && cp index.html public/ && cp -r api public/",
+    "build": "mkdir -p public && cp -r api public/",
     "start": "vercel dev"
   }
 }
