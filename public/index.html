@@ -89,7 +89,7 @@
         </div>
 
         <footer align="center">
-            © 2025 YourGlucoChef.com • Built by ASI
+            © 2025 YourGlucoChef.com • Developped by ASI
         </footer>
     </div>
 
@@ -98,7 +98,7 @@
             const ingredients = document.getElementById('ingredients').value;
             const resultDiv = document.getElementById('recipe-result');
             
-            resultDiv.innerHTML = '<p>🧑🍳 AI Chef is cooking...</p>';
+            resultDiv.innerHTML = '<p>🧑🍳 Please be patient while YourGlucoChef is preparing your personal recipe...</p>';
 
             try {
                 const response = await fetch('/api/generate', {
