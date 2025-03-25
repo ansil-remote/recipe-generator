@@ -1,5 +1,7 @@
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const LRUCache = require('lru-cache');
 import axios from 'axios';
-import LRUCache from 'lru-cache';
 
 // Rate limiter configuration
 const rateLimitCache = new LRUCache({
@@ -22,7 +24,7 @@ export default async (req, res) => {
 
   try {
     // Validate request body
-    if (!req.body || !req.body.ingredients) {
+    if (!req.body?.ingredients?.trim()) {
       return res.status(400).json({
         error: "Invalid request",
         message: "Please provide ingredients parameter"
@@ -31,20 +33,20 @@ export default async (req, res) => {
 
     // Validate environment configuration
     if (!process.env.OPENAI_API_KEY) {
-      console.error('❌ Missing OpenAI API Key in environment variables');
+      console.error('❌ Missing OpenAI API Key');
       return res.status(500).json({
-        error: "Server configuration error",
+        error: "Server error",
         message: "API key not configured"
       });
     }
 
     const { ingredients, carbs = 30 } = req.body;
     
-    // Validate ingredients input
+    // Validate ingredients
     if (typeof ingredients !== 'string' || ingredients.trim().length < 3) {
       return res.status(400).json({
         error: "Invalid input",
-        message: "Please provide valid ingredients list"
+        message: "Ingredients list too short"
       });
     }
 
@@ -64,7 +66,7 @@ export default async (req, res) => {
       "tips": "Diabetes-friendly tip"
     }`;
 
-    // Make API call to OpenAI
+    // OpenAI API call
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -78,54 +80,44 @@ export default async (req, res) => {
           'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
           'Content-Type': 'application/json'
         },
-        timeout: 10000
+        timeout: 15000
       }
     );
 
-    // Validate OpenAI response
-    if (!response.data?.choices?.[0]?.message?.content) {
-      console.error('❌ Invalid response structure from OpenAI:', response.data);
+    // Validate response structure
+    const content = response.data.choices[0]?.message?.content;
+    if (!content) {
+      console.error('❌ Empty AI response');
       return res.status(500).json({
         error: "AI service error",
-        message: "Unexpected response format"
+        message: "No content received"
       });
     }
 
-    // Parse and validate recipe JSON
+    // Parse and validate JSON
     try {
-      const recipe = JSON.parse(response.data.choices[0].message.content);
-      
-      // Validate required recipe fields
+      const recipe = JSON.parse(content);
       if (!recipe.title || !recipe.ingredients || !recipe.instructions) {
-        throw new Error("Missing required recipe fields");
+        throw new Error("Missing required fields");
       }
-      
       return res.status(200).json(recipe);
-      
     } catch (parseError) {
-      console.error('❌ JSON Parsing Error:', parseError);
-      console.debug('Raw AI Response:', response.data.choices[0].message.content);
+      console.error('❌ JSON Parse Error:', parseError.message);
+      console.debug('Raw Content:', content);
       return res.status(500).json({
-        error: "Data format error",
-        message: "Failed to parse recipe response"
+        error: "Format error",
+        message: "Failed to parse recipe"
       });
     }
 
   } catch (error) {
     console.error('🔥 API Error:', error.message);
-    
     if (error.response) {
-      console.error('OpenAI API Response Error:', {
-        status: error.response.status,
-        data: error.response.data
-      });
+      console.error('OpenAI Error:', error.response.status, error.response.data);
     }
-    
-    const errorMessage = error.response?.data?.error?.message || error.message;
-    
-    return res.status(500).json({ 
-      error: "Recipe generation failed",
-      details: errorMessage 
+    return res.status(500).json({
+      error: "Generation failed",
+      details: error.response?.data?.error?.message || error.message
     });
   }
 };
