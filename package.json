@@ -7,15 +7,11 @@
     "@vercel/node": "^4.0.0",
     "lru-cache": "^10.2.0"
   },
-  "overrides": {
-    "esbuild": ">=0.24.3",
-    "path-to-regexp": ">=6.2.3"
-  },
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "build": "mkdir -p public && cp -r api public/",
+    "build": "mkdir -p public && cp index.html public/ && cp -r api public/",
     "start": "vercel dev"
   }
 }
