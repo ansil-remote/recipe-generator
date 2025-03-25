@@ -6,14 +6,19 @@ import axios from 'axios';
 // Rate limiter configuration
 const rateLimitCache = new LRUCache({
   max: 500,
-  ttl: 1000 * 60 // 1 minute window
+  ttl: 1000 * 60 // 1-minute window
 });
 
 export default async (req, res) => {
-  // Rate limiting by IP
+  // ✅ Ensure only POST requests are allowed
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed", message: "Use POST request only" });
+  }
+
+  // ✅ Rate limiting by IP
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  const limit = 5; // 5 requests per minute
-  
+  const limit = 5; // Allow 5 requests per minute
+
   if (rateLimitCache.get(ip) >= limit) {
     return res.status(429).json({
       error: "Too many requests",
@@ -23,15 +28,17 @@ export default async (req, res) => {
   rateLimitCache.set(ip, (rateLimitCache.get(ip) || 0) + 1);
 
   try {
-    // Validate request body
-    if (!req.body?.ingredients?.trim()) {
+    // ✅ Parse request body safely
+    const body = await req.json().catch(() => null);
+
+    if (!body || !body.ingredients?.trim()) {
       return res.status(400).json({
         error: "Invalid request",
-        message: "Please provide ingredients parameter"
+        message: "Please provide an 'ingredients' parameter"
       });
     }
 
-    // Validate environment configuration
+    // ✅ Validate OpenAI API key
     if (!process.env.OPENAI_API_KEY) {
       console.error('❌ Missing OpenAI API Key');
       return res.status(500).json({
@@ -40,13 +47,13 @@ export default async (req, res) => {
       });
     }
 
-    const { ingredients, carbs = 30 } = req.body;
-    
-    // Validate ingredients
+    const { ingredients, carbs = 30 } = body;
+
+    // ✅ Validate ingredients input
     if (typeof ingredients !== 'string' || ingredients.trim().length < 3) {
       return res.status(400).json({
         error: "Invalid input",
-        message: "Ingredients list too short"
+        message: "Ingredients list must be at least 3 characters long"
       });
     }
 
@@ -66,14 +73,13 @@ export default async (req, res) => {
       "tips": "Diabetes-friendly tip"
     }`;
 
-    // OpenAI API call
+    // ✅ Call OpenAI API
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
         model: "gpt-3.5-turbo",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.5,
-        response_format: { type: "json_object" }
+        temperature: 0.5
       },
       {
         headers: {
@@ -84,21 +90,21 @@ export default async (req, res) => {
       }
     );
 
-    // Validate response structure
+    // ✅ Ensure response contains valid content
     const content = response.data.choices[0]?.message?.content;
     if (!content) {
       console.error('❌ Empty AI response');
       return res.status(500).json({
         error: "AI service error",
-        message: "No content received"
+        message: "No content received from OpenAI"
       });
     }
 
-    // Parse and validate JSON
+    // ✅ Parse and validate JSON
     try {
       const recipe = JSON.parse(content);
       if (!recipe.title || !recipe.ingredients || !recipe.instructions) {
-        throw new Error("Missing required fields");
+        throw new Error("Missing required fields in recipe");
       }
       return res.status(200).json(recipe);
     } catch (parseError) {
@@ -106,7 +112,7 @@ export default async (req, res) => {
       console.debug('Raw Content:', content);
       return res.status(500).json({
         error: "Format error",
-        message: "Failed to parse recipe"
+        message: "Failed to parse recipe JSON"
       });
     }
 
